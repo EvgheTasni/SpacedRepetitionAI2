@@ -1,0 +1,4 @@
+"permissionRules": [
+       { "permission": "*", "action": "allow", "pattern": "*" },                                                                                                                                OpenCode includes free models
+       { "permission": "edit", "action": "allow" }  // ← remove or change this                                                                                                                   so you can start immediately.
+     ]
