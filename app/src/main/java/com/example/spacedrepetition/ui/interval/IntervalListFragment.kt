@@ -8,6 +8,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.spacedrepetition.AddIntervalDialog
 import com.example.spacedrepetition.databinding.FragmentIntervalListBinding
 
 class IntervalListFragment : Fragment() {
@@ -34,6 +35,9 @@ class IntervalListFragment : Fragment() {
             },
             onSetDefault = { interval ->
                 viewModel.setAsDefault(interval)
+            },
+            getLinkedTopics = { intervalId ->
+                viewModel.getTopicsForInterval(intervalId)
             }
         )
 
@@ -44,6 +48,10 @@ class IntervalListFragment : Fragment() {
             adapter.submitList(intervals)
             binding.emptyView.visibility = if (intervals.isEmpty()) View.VISIBLE else View.GONE
         })
+
+        binding.fab.setOnClickListener {
+            AddIntervalDialog(viewModel).show(parentFragmentManager, "add_interval")
+        }
     }
 
     override fun onDestroyView() {

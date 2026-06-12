@@ -13,12 +13,22 @@ class IntervalDao(private val db: SQLiteDatabase) {
 
     private val gson = Gson()
 
+    @Volatile
+    private var _allIntervals: IntervalListLiveData? = null
+
     fun getAllIntervals(): IntervalListLiveData {
-        return IntervalListLiveData(db, gson)
+        return _allIntervals ?: synchronized(this) {
+            _allIntervals ?: IntervalListLiveData(db, gson).also { _allIntervals = it }
+        }
     }
 
-    fun getDefaultInterval(): LiveData<Interval?> {
-        return DefaultIntervalLiveData(db, gson)
+    @Volatile
+    private var _defaultInterval: DefaultIntervalLiveData? = null
+
+    fun getDefaultInterval(): DefaultIntervalLiveData {
+        return _defaultInterval ?: synchronized(this) {
+            _defaultInterval ?: DefaultIntervalLiveData(db, gson).also { _defaultInterval = it }
+        }
     }
 
     suspend fun insert(interval: Interval): Long = withContext(Dispatchers.IO) {
@@ -32,26 +42,41 @@ class IntervalDao(private val db: SQLiteDatabase) {
     }
 
     suspend fun deleteById(id: Long) = withContext(Dispatchers.IO) {
-        // If the deleted interval was the default, clear the default flag
-        val cursor = db.query(
-            TABLE_INTERVALS,
-            arrayOf(COL_IS_DEFAULT),
-            "$COL_ID = ?",
-            arrayOf(id.toString()),
-            null, null, null,
-            "1"
-        )
-        val wasDefault = if (cursor.moveToNext()) {
-            cursor.getInt(cursor.getColumnIndexOrThrow(COL_IS_DEFAULT)) == 1
-        } else {
-            false
-        }
-        cursor.close()
+        db.run {
+            try {
+               beginTransactionNonExclusive()
 
-        db.delete(TABLE_INTERVALS, "$COL_ID = ?", arrayOf(id.toString()))
+                // If the deleted interval was the default, clear the default flag
+                val cursor = query(
+                    TABLE_INTERVALS,
+                    arrayOf(COL_IS_DEFAULT),
+                    "$COL_ID = ?",
+                    arrayOf(id.toString()),
+                    null, null, null,
+                    "1"
+                )
+                val wasDefault = if (cursor.moveToNext()) {
+                    cursor.getInt(cursor.getColumnIndexOrThrow(COL_IS_DEFAULT)) == 1
+                } else {
+                    false
+                }
+                cursor.close()
 
-        if (wasDefault) {
-            db.execSQL("UPDATE $TABLE_INTERVALS SET $COL_IS_DEFAULT = 0")
+                // Delete interval
+                delete(TABLE_INTERVALS, "$COL_ID = ?", arrayOf(id.toString()))
+
+                // If it was the default, clear all defaults
+                if (wasDefault) {
+                    execSQL("UPDATE $TABLE_INTERVALS SET $COL_IS_DEFAULT = 0")
+                }
+
+                // Also delete all topics linked to this interval
+                db.delete(TopicDao.TABLE_TOPICS, "${TopicDao.COL_INTERVAL_ID} = ?", arrayOf(id.toString()))
+
+                setTransactionSuccessful()
+            } finally {
+                endTransaction()
+            }
         }
     }
 

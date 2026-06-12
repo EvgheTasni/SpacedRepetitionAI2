@@ -2,8 +2,8 @@ package com.example.spacedrepetition.ui.main
 
 import android.content.Context
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.FragmentPagerAdapter
+import androidx.fragment.app.FragmentActivity
+import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.example.spacedrepetition.R
 
 private val TAB_TITLES = arrayOf(
@@ -12,26 +12,23 @@ private val TAB_TITLES = arrayOf(
 )
 
 /**
- * A [FragmentPagerAdapter] that returns a fragment corresponding to
+ * A [FragmentStateAdapter] that returns a fragment corresponding to
  * one of the sections/tabs/pages.
  */
-class SectionsPagerAdapter(private val context: Context, fm: FragmentManager) :
-    FragmentPagerAdapter(fm) {
+class SectionsPagerAdapter(private val context: Context, fragmentActivity: FragmentActivity) :
+    FragmentStateAdapter(fragmentActivity) {
 
-    override fun getItem(position: Int): Fragment {
+    override fun createFragment(position: Int): Fragment {
         return when (position) {
-            0 -> PlaceholderFragment.newInstance(position + 1)
+            0 -> com.example.spacedrepetition.ui.topic.TopicListFragment()
             1 -> com.example.spacedrepetition.ui.interval.IntervalListFragment()
-            else -> PlaceholderFragment.newInstance(position + 1)
+            else -> com.example.spacedrepetition.ui.topic.TopicListFragment()
         }
     }
 
-    override fun getPageTitle(position: Int): CharSequence? {
-        return context.resources.getString(TAB_TITLES[position])
-    }
+    override fun getItemCount() = TAB_TITLES.size
 
-    override fun getCount(): Int {
-        // Show 2 total pages.
-        return 2
+    fun getPageTitle(position: Int): CharSequence? {
+        return context.resources.getString(TAB_TITLES[position])
     }
 }

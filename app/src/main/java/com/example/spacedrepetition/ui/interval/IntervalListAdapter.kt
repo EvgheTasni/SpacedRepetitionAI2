@@ -8,11 +8,13 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.spacedrepetition.data.Interval
+import com.example.spacedrepetition.data.Topic
 import com.example.spacedrepetition.databinding.ItemIntervalBinding
 
 class IntervalListAdapter(
     private val onDelete: (Interval) -> Unit,
-    private val onSetDefault: (Interval) -> Unit
+    private val onSetDefault: (Interval) -> Unit,
+    private val getLinkedTopics: (Long) -> List<Topic> = { emptyList() }
 ) : ListAdapter<Interval, IntervalListAdapter.ViewHolder>(DiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -56,9 +58,19 @@ class IntervalListAdapter(
         private fun showDeleteConfirmation(interval: Interval) {
             val context = binding.root.context
             if (context is FragmentActivity) {
+                val linkedTopics = getLinkedTopics(interval.id)
+                val message = buildString {
+                    append("Are you sure you want to delete \"${interval.name}\"?")
+                    if (linkedTopics.isNotEmpty()) {
+                        append("\n\nThe following topics will also be deleted:\n")
+                        linkedTopics.forEach { t ->
+                            append("• ${t.title}\n")
+                        }
+                    }
+                }
                 AlertDialog.Builder(context)
                     .setTitle("Delete Interval")
-                    .setMessage("Are you sure you want to delete \"${interval.name}\"?")
+                    .setMessage(message)
                     .setPositiveButton("Delete") { _, _ ->
                         onDelete(interval)
                     }
