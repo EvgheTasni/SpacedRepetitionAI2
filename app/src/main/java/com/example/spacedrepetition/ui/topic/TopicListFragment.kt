@@ -32,9 +32,6 @@ class TopicListFragment : Fragment() {
         adapter = TopicListAdapter(
             onDelete = { topic ->
                 viewModel.deleteTopic(topic)
-            },
-            onTogglePause = { topic, paused ->
-                viewModel.setPaused(topic, paused)
             }
         )
 

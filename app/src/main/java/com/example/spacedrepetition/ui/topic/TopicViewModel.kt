@@ -31,9 +31,9 @@ class TopicViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun setPaused(topic: Topic, paused: Boolean) {
+    fun recordNotification(topic: Topic) {
         viewModelScope.launch {
-            topicDao.setPaused(topic.id, paused)
+            topicDao.updateLastNotifiedAt(topic.id, System.currentTimeMillis())
             topics.refresh()
         }
     }

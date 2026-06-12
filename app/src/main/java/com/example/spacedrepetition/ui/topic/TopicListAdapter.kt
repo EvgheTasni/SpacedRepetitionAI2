@@ -13,9 +13,20 @@ import com.example.spacedrepetition.databinding.ItemTopicBinding
 
 class TopicListAdapter(
     private val onDelete: (Topic) -> Unit,
-    private val onTogglePause: (Topic, Boolean) -> Unit,
     private val intervals: MutableList<Interval> = mutableListOf()
 ) : ListAdapter<Topic, TopicListAdapter.ViewHolder>(DiffCallback) {
+
+    private val MILLISECONDS_PER_DAY: Long = 24 * 60 * 60 * 1000
+
+    private fun daysSince(timestamp: Long): String {
+        if (timestamp <= 0) return "Never"
+        val days = (System.currentTimeMillis() - timestamp) / MILLISECONDS_PER_DAY
+        return when {
+            days == 0L -> "Today"
+            days == 1L -> "1 day ago"
+            else -> "$days days ago"
+        }
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ItemTopicBinding.inflate(
@@ -62,20 +73,9 @@ class TopicListAdapter(
                 binding.progressText.visibility = android.view.View.GONE
             }
 
-            // Pause/Resume button
-            if (topic.isPaused) {
-                binding.pauseButton.setImageResource(android.R.drawable.ic_media_play)
-                binding.pauseButton.contentDescription = "Resume topic"
-                binding.root.alpha = 0.6f
-            } else {
-                binding.pauseButton.setImageResource(android.R.drawable.ic_media_pause)
-                binding.pauseButton.contentDescription = "Pause topic"
-                binding.root.alpha = 1.0f
-            }
-
-            binding.pauseButton.setOnClickListener {
-                onTogglePause(topic, !topic.isPaused)
-            }
+            // Last notified info
+            binding.lastNotifiedText.text = "Last notified: ${daysSince(topic.lastNotifiedAt)}"
+            binding.lastNotifiedText.visibility = android.view.View.VISIBLE
 
             binding.deleteButton.setOnClickListener {
                 showDeleteConfirmation(topic)

@@ -44,15 +44,6 @@
             </LinearLayout>
 
             <ImageButton
-                android:id="@+id/pauseButton"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginStart="8dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Pause/Resume topic"
-                android:src="@android:drawable/ic_media_pause" />
-
-            <ImageButton
                 android:id="@+id/deleteButton"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
@@ -95,6 +86,15 @@
             android:layout_marginTop="4dp"
             android:progress="0"
             android:max="100" />
+
+        <TextView
+            android:id="@+id/lastNotifiedText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textAppearance="@style/TextAppearance.AppCompat.Small"
+            android:textColor="?android:attr/textColorSecondary"
+            tools:text="Last notified: Never" />
 
     </LinearLayout>
 
