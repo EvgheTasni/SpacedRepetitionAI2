@@ -36,6 +36,15 @@
         </LinearLayout>
 
         <ImageButton
+            android:id="@+id/defaultButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@android:drawable/star_big_off"
+            android:contentDescription="Set as Default"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="8dp" />
+
+        <ImageButton
             android:id="@+id/deleteButton"
             android:layout_width="48dp"
             android:layout_height="48dp"

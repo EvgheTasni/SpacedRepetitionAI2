@@ -2,6 +2,7 @@ package com.example.spacedrepetition.ui.interval
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import com.example.spacedrepetition.data.AppDatabase
 import com.example.spacedrepetition.data.Interval
@@ -14,6 +15,8 @@ class IntervalViewModel(application: Application) : AndroidViewModel(application
 
     val intervals: IntervalListLiveData = dao.getAllIntervals()
 
+    val defaultInterval: LiveData<Interval?> = dao.getDefaultInterval()
+
     fun isNameUnique(name: String): Boolean {
         return (intervals.value ?: emptyList()).none { it.name.equals(name, ignoreCase = true) }
     }
@@ -23,6 +26,7 @@ class IntervalViewModel(application: Application) : AndroidViewModel(application
             val interval = Interval(name = name, notificationTimes = notificationTimes)
             dao.insert(interval)
             intervals.refresh()
+            defaultInterval.refresh()
         }
     }
 
@@ -30,6 +34,15 @@ class IntervalViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             dao.deleteById(interval.id)
             intervals.refresh()
+            defaultInterval.refresh()
+        }
+    }
+
+    fun setAsDefault(interval: Interval) {
+        viewModelScope.launch {
+            dao.setAsDefault(interval.id)
+            intervals.refresh()
+            defaultInterval.refresh()
         }
     }
 }

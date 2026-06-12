@@ -28,9 +28,14 @@ class IntervalListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        adapter = IntervalListAdapter(onDelete = { interval ->
-            viewModel.deleteInterval(interval)
-        })
+        adapter = IntervalListAdapter(
+            onDelete = { interval ->
+                viewModel.deleteInterval(interval)
+            },
+            onSetDefault = { interval ->
+                viewModel.setAsDefault(interval)
+            }
+        )
 
         binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerView.adapter = adapter

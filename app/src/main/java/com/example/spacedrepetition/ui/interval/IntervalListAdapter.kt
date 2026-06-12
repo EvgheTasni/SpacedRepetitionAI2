@@ -11,7 +11,8 @@ import com.example.spacedrepetition.data.Interval
 import com.example.spacedrepetition.databinding.ItemIntervalBinding
 
 class IntervalListAdapter(
-    private val onDelete: (Interval) -> Unit
+    private val onDelete: (Interval) -> Unit,
+    private val onSetDefault: (Interval) -> Unit
 ) : ListAdapter<Interval, IntervalListAdapter.ViewHolder>(DiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -31,6 +32,21 @@ class IntervalListAdapter(
         fun bind(interval: Interval) {
             binding.nameText.text = interval.name
             binding.durationText.text = formatInterval(interval.notificationTimes)
+
+            // Update star icon based on default status
+            binding.defaultButton.setImageResource(
+                if (interval.isDefault) android.R.drawable.star_big_on
+                else android.R.drawable.star_big_off
+            )
+            binding.defaultButton.contentDescription = if (interval.isDefault) {
+                "Unset as Default"
+            } else {
+                "Set as Default"
+            }
+
+            binding.defaultButton.setOnClickListener {
+                onSetDefault(interval)
+            }
 
             binding.deleteButton.setOnClickListener {
                 showDeleteConfirmation(interval)
