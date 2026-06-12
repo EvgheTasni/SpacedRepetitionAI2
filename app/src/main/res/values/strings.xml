@@ -2,6 +2,6 @@
     <string name="app_name">SpacedRepetition</string>
 
     <string name="title_activity_default">DefaultActivity</string>
-    <string name="tab_text_1">Tab 1</string>
+    <string name="tab_text_1">Topics</string>
     <string name="tab_text_2">Interval</string>
 </resources>

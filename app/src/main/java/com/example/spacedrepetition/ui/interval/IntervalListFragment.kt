@@ -4,9 +4,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.spacedrepetition.databinding.FragmentIntervalListBinding
 
@@ -15,7 +15,7 @@ class IntervalListFragment : Fragment() {
     private var _binding: FragmentIntervalListBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var viewModel: IntervalViewModel
+    private val viewModel: IntervalViewModel by activityViewModels()
     private lateinit var adapter: IntervalListAdapter
 
     override fun onCreateView(
@@ -28,8 +28,9 @@ class IntervalListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        viewModel = ViewModelProvider(this).get(IntervalViewModel::class.java)
-        adapter = IntervalListAdapter()
+        adapter = IntervalListAdapter(onDelete = { interval ->
+            viewModel.deleteInterval(interval)
+        })
 
         binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerView.adapter = adapter

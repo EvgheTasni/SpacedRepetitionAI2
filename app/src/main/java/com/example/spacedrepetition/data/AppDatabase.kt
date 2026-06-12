@@ -28,7 +28,7 @@ class AppDatabase private constructor(context: Context) :
 
     companion object {
         private const val DB_NAME = "spaced_repetition.db"
-        private const val DB_VERSION = 1
+        private const val DB_VERSION = 2
 
         @Volatile
         private var INSTANCE: AppDatabase? = null

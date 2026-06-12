@@ -2,14 +2,17 @@ package com.example.spacedrepetition.ui.interval
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.appcompat.app.AlertDialog
+import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.spacedrepetition.data.Interval
 import com.example.spacedrepetition.databinding.ItemIntervalBinding
 
-class IntervalListAdapter :
-    ListAdapter<Interval, IntervalListAdapter.ViewHolder>(DiffCallback) {
+class IntervalListAdapter(
+    private val onDelete: (Interval) -> Unit
+) : ListAdapter<Interval, IntervalListAdapter.ViewHolder>(DiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ItemIntervalBinding.inflate(
@@ -22,22 +25,45 @@ class IntervalListAdapter :
         holder.bind(getItem(position))
     }
 
-    class ViewHolder(private val binding: ItemIntervalBinding) :
+    inner class ViewHolder(private val binding: ItemIntervalBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(interval: Interval) {
             binding.nameText.text = interval.name
-            binding.durationText.text = formatDuration(interval.durationMillis)
+            binding.durationText.text = formatInterval(interval.notificationTimes)
+
+            binding.deleteButton.setOnClickListener {
+                showDeleteConfirmation(interval)
+            }
         }
 
-        private fun formatDuration(millis: Long): String {
-            val hours = millis / 3_600_000
-            val minutes = (millis % 3_600_000) / 60_000
-            return when {
-                hours > 0 -> "${hours}h ${minutes}m"
-                minutes > 0 -> "${minutes}m"
-                else -> "${millis / 1000}s"
+        private fun showDeleteConfirmation(interval: Interval) {
+            val context = binding.root.context
+            if (context is FragmentActivity) {
+                AlertDialog.Builder(context)
+                    .setTitle("Delete Interval")
+                    .setMessage("Are you sure you want to delete \"${interval.name}\"?")
+                    .setPositiveButton("Delete") { _, _ ->
+                        onDelete(interval)
+                    }
+                    .setNegativeButton("Cancel", null)
+                    .show()
             }
+        }
+
+        private fun formatInterval(times: List<Long>): String {
+            if (times.isEmpty()) return "Never"
+
+            val daysInMillis = 24 * 60 * 60 * 1000L
+            val formatted = times.map { millis ->
+                when {
+                    millis >= daysInMillis * 7 -> "${millis / daysInMillis / 7}w"
+                    millis >= daysInMillis -> "${millis / daysInMillis}d"
+                    millis >= 60_000 -> "${millis / 60_000}h"
+                    else -> "${millis / 1000}s"
+                }
+            }
+            return formatted.joinToString(", ")
         }
     }
 

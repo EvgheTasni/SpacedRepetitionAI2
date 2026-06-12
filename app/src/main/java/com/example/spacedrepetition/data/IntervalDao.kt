@@ -4,19 +4,23 @@ import android.content.ContentValues
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import androidx.lifecycle.LiveData
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class IntervalDao(private val db: SQLiteDatabase) {
 
-    fun getAllIntervals(): LiveData<List<Interval>> {
-        return IntervalListLiveData(db)
+    private val gson = Gson()
+
+    fun getAllIntervals(): IntervalListLiveData {
+        return IntervalListLiveData(db, gson)
     }
 
     suspend fun insert(interval: Interval): Long = withContext(Dispatchers.IO) {
         val values = ContentValues().apply {
             put(COL_NAME, interval.name)
-            put(COL_DURATION, interval.durationMillis)
+            put(COL_NOTIFICATION_TIMES, gson.toJson(interval.notificationTimes))
             put(COL_CREATED_AT, interval.createdAt)
         }
         db.insert(TABLE_INTERVALS, null, values)
@@ -30,14 +34,14 @@ class IntervalDao(private val db: SQLiteDatabase) {
         const val TABLE_INTERVALS = "intervals"
         const val COL_ID = "id"
         const val COL_NAME = "name"
-        const val COL_DURATION = "duration_millis"
+        const val COL_NOTIFICATION_TIMES = "notification_times"
         const val COL_CREATED_AT = "created_at"
 
         private const val CREATE_TABLE = """
             CREATE TABLE IF NOT EXISTS $TABLE_INTERVALS (
                 $COL_ID INTEGER PRIMARY KEY AUTOINCREMENT,
                 $COL_NAME TEXT NOT NULL,
-                $COL_DURATION INTEGER NOT NULL,
+                $COL_NOTIFICATION_TIMES TEXT NOT NULL,
                 $COL_CREATED_AT INTEGER NOT NULL
             )
         """
@@ -46,21 +50,32 @@ class IntervalDao(private val db: SQLiteDatabase) {
             db.execSQL(CREATE_TABLE)
         }
 
-        fun fromCursor(cursor: Cursor): Interval {
+        fun fromCursor(cursor: Cursor, gson: Gson): Interval {
+            val json = cursor.getString(cursor.getColumnIndexOrThrow(COL_NOTIFICATION_TIMES))
+            val listType = object : TypeToken<List<Long>>() {}.type
+            val notificationTimes = gson.fromJson(json, listType) ?: emptyList<Long>()
+            
             return Interval(
                 id = cursor.getLong(cursor.getColumnIndexOrThrow(COL_ID)),
                 name = cursor.getString(cursor.getColumnIndexOrThrow(COL_NAME)),
-                durationMillis = cursor.getLong(cursor.getColumnIndexOrThrow(COL_DURATION)),
+                notificationTimes = notificationTimes,
                 createdAt = cursor.getLong(cursor.getColumnIndexOrThrow(COL_CREATED_AT))
             )
         }
     }
 }
 
-private class IntervalListLiveData(private val db: SQLiteDatabase) : LiveData<List<Interval>>() {
+class IntervalListLiveData(
+    private val db: SQLiteDatabase,
+    private val gson: Gson
+) : LiveData<List<Interval>>() {
 
     override fun onActive() {
         super.onActive()
+        load()
+    }
+
+    fun refresh() {
         load()
     }
 
@@ -71,7 +86,7 @@ private class IntervalListLiveData(private val db: SQLiteDatabase) : LiveData<Li
         )
         val list = mutableListOf<Interval>()
         while (cursor.moveToNext()) {
-            list.add(IntervalDao.fromCursor(cursor))
+            list.add(IntervalDao.fromCursor(cursor, gson))
         }
         cursor.close()
         postValue(list)
